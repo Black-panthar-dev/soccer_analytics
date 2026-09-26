@@ -1,0 +1,10 @@
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+pytest-cache-files-*/
+data/
+output/
+config/config.json
+PHASE1_CHECKPOINT.md
+PHASE1_PROGRESS.md

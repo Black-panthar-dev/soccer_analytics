@@ -1,0 +1,136 @@
+{
+  "config_version": 1,
+  "paths": {
+    "hardware_input": "data/hardware",
+    "roster_input": "data/roster",
+    "juggling_input": "data/juggling",
+    "logos": "logos",
+    "template": "templates/Sogility GO Elite Athlete Assessment FINAL.png",
+    "page1_clean_template": "templates/Sogility GO Elite Athlete Assessment FINAL.png",
+    "page2_sogility_logo": "logos/Sogility_Logo.png",
+    "output": "output",
+    "temp": "output/temp"
+  },
+  "input_files": {
+    "hardware": "STLDA 8_15 DATA - STLDA 8_15 Data.csv",
+    "roster": "STLDA MASTER COPY - Sheet1.csv",
+    "juggling": "Copy of STLDA Juggle Scores - Sheet1.csv"
+  },
+  "assessment": {
+    "assessment_date": null,
+    "minimum_cohort_size": null,
+    "cohort_fields": ["age_group"]
+  },
+  "matching": {
+    "allow_unique_name_fallback": true,
+    "allow_fuzzy_matching": false
+  },
+  "client_overrides": {
+    "roster_age_groups": []
+  },
+  "drill_aliases": {
+    "90 Degree Passing": "passing_90",
+    "180 Degree Passing": "passing_180",
+    "180 Degree passing": "passing_180",
+    "5-10-2005": "shuttle_5_10_5",
+    "Figure 8": "figure8",
+    "Sprints": "sprints",
+    "Sprints Assessments": "sprints"
+  },
+  "sprint_mapping": {
+    "dash_10y": "first_split",
+    "dash_20y": "overall_total",
+    "source_field_positions": {
+      "first_split_10y": 21,
+      "second_split_10y": 22,
+      "total_time_20y": 12
+    },
+    "complete_attempt_tolerance_seconds": 0.01
+  },
+  "metrics": {
+    "dash_10y": {"label": "10-Yard Dash", "direction": "lower"},
+    "dash_20y": {"label": "20-Yard Dash", "direction": "lower"},
+    "shuttle_5_10_5": {
+      "label": "5-10-5",
+      "direction": "lower",
+      "source_aliases": ["5-10-2005"]
+    },
+    "figure8_best": {"label": "Dribbling: Figure 8 (Best Time)", "direction": "lower"},
+    "figure8_worst": {"label": "Dribbling: Figure 8 (Worst Time)", "direction": "lower"},
+    "passing_90": {"label": "90 Degree Passing", "direction": "higher"},
+    "passing_180": {
+      "label": "180 Degree Passing",
+      "direction": "higher",
+      "source_aliases": ["180 Degree Passing", "180 Degree passing"]
+    },
+    "juggling_dominant": {"label": "Dominant Foot", "direction": "higher"},
+    "juggling_non_dominant": {"label": "Non-Dominant Foot", "direction": "higher"},
+    "juggling_thighs": {"label": "Thighs", "direction": "higher"}
+  },
+  "percentiles": {
+    "tie_method": "average",
+    "single_member_percentile": 50.0,
+    "all_identical_percentile": 50.0
+  },
+  "team_logos": {},
+  "logo_defaults": {
+    "team_logo": "STLDA LOGO.png",
+    "preserve_sogility_logo": true,
+    "team_logo_placement": "right_of_sogility_logo",
+    "page1_club_logo_overlay": false
+  },
+  "layout": {
+    "canvas_width": 1920,
+    "canvas_height": 1080,
+    "athlete_name_position": [43, 265],
+    "birthdate_position": [43, 344],
+    "team_text_box": [43, 423, 320, 478],
+    "legend_athlete_position": [105, 1016],
+    "legend_benchmark_position": [400, 1007],
+    "club_logo_bounds": [1690, 35, 1870, 145],
+    "radar_center": [891, 590],
+    "radar_radius": 328,
+    "radar_overlay_bounds": [563, 262, 1219, 918],
+    "radar_start_angle_degrees": 108.0,
+    "athlete_info_font_size": 24,
+    "team_font_size": 20,
+    "legend_font_size": 18,
+    "name_format": "last_first"
+  },
+  "page2_layout": {
+    "canvas_width": 1920,
+    "canvas_height": 1080,
+    "background_color": "#030708",
+    "white_color": "#F4F7F7",
+    "green_color": "#39D353",
+    "cyan_color": "#43D9FF",
+    "header_position": [90, 58],
+    "identity_position": [90, 165],
+    "table_bounds": [90, 315, 1830, 970],
+    "column_positions": [110, 830, 1160, 1450],
+    "row_spacing": 58,
+    "sogility_logo_bounds": [1640, 35, 1795, 190],
+    "title_font_size": 40,
+    "identity_font_size": 20,
+    "table_header_font_size": 22,
+    "table_font_size": 21
+  },
+  "future_report": {
+    "page_2_performance_table": {
+      "enabled": true,
+      "implementation_status": "production_two_page_pdf_and_batch_enabled",
+      "columns": ["Metric", "Athlete Raw Score", "Percentile", "Raw Age-Group Average"],
+      "visual_requirements": {
+        "background": "black_or_dark",
+        "typography_and_rules": "white",
+        "athlete_value_accent": "subtle_green",
+        "age_group_average_accent": "subtle_cyan"
+      }
+    }
+  },
+  "logging": {
+    "level": "INFO",
+    "file": "output/run.log",
+    "format": "%(asctime)s | %(levelname)s | %(name)s | %(message)s"
+  }
+}
