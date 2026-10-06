@@ -28,7 +28,7 @@ The expected input filenames are configured in `config/config.json`. Keep an
 unchanged backup of every source file; the generator never needs the original
 CSVs to be edited.
 
-## How to run
+## 1. Generating reports
 
 ### Windows
 
@@ -109,5 +109,70 @@ Run the automated tests:
 python -m pytest -q
 ```
 
-The tool is local and offline. It does not include Phase 2 history, comparison,
-web, or email-delivery features.
+## Troubleshooting
+
+- If Python is not found, install Python 3.11 or newer and reopen the terminal.
+- If a module is missing, rerun `python -m pip install -r requirements.txt` from
+  the project folder.
+- If an input file is reported missing, confirm its filename matches
+  `config/config.json` and that it is in the correct `data/` subfolder.
+- If an athlete is not generated, review `output/validation_details.csv`,
+  `output/final/failed_reports.csv`, and `output/final/generation_log.txt`.
+- If a report has `N/A` values, check the source assessment data. Missing values
+  are intentionally preserved and are not calculation failures.
+- A rerun safely rewrites the manifest and same-named report files. Remove or
+  archive an old `output/final/` folder first if a completely clean delivery set
+  is required.
+
+Production reports are delivered separately under `output/final/`; they are not
+embedded in the code/tool ZIP.
+
+## 2. Dry run
+
+Email delivery is a separate, deliberate operation. Generating reports never
+sends email. Review the complete recipient plan first:
+
+```text
+python -m src.email_send_cli --dry-run
+```
+
+**DO NOT run `--live-send` until the recipient dry-run has been reviewed.** A
+shared parent address receives one message containing all reports assigned to
+that address.
+
+## 3. Test email
+
+Follow `CLIENT_SETUP_GOOGLE_EMAIL.md`, set a controlled `test_recipient` in
+`config/email_settings.json`, and run:
+
+```text
+python -m src.email_send_cli --test-send
+```
+
+This sends exactly one test message only to that configured address. The Google
+account authorized in the browser is the sender; the tool never stores the
+account's normal password.
+
+## 4. Live email delivery
+
+Live delivery requires all three safeguards: `live_send_enabled` set to `true`,
+the explicit command below, and the exact dynamic confirmation phrase displayed
+by the CLI:
+
+```text
+python -m src.email_send_cli --dry-run
+python -m src.email_send_cli --live-send
+```
+
+Successful deliveries are logged and protected against accidental duplicates.
+Failed deliveries remain retryable; force resend is a separate explicit option.
+Google credentials and tokens remain local and private. Workspace administrator
+approval may be required. See `PHASE2_EMAIL_HOW_TO_USE.md` for operator details.
+
+## Historical comparisons
+
+The data model supports multiple dated assessments. When history exists, reports
+compare the latest assessment with the immediately previous assessment and add a
+third page. Current production data contains only one genuine assessment date,
+so current production reports remain two pages; comparison pages begin when a
+second dated assessment dataset is supplied.

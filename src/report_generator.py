@@ -214,10 +214,15 @@ def render_report_preview(
     display_name = format_athlete_name(athlete.get("first_name"), athlete.get("last_name"), layout.name_format)
     birthday = format_birthday(athlete.get("birthday"))
     info_font = _font(layout.athlete_info_font_size)
+    info_name_max_width = layout.team_text_box[2] + 25 - layout.athlete_name_position[0]
+    info_name_font = _font_fitting_width(
+        display_name, layout.athlete_info_font_size, info_name_max_width, draw,
+        minimum_size=16,
+    )
     team_font = _font(layout.team_font_size)
     legend_font = _font(layout.legend_font_size)
     value_color = (238, 244, 244, 255)
-    draw.text(layout.athlete_name_position, display_name, font=info_font, fill=value_color)
+    draw.text(layout.athlete_name_position, display_name, font=info_name_font, fill=value_color)
     draw.text(layout.birthdate_position, birthday, font=info_font, fill=value_color)
     team_box = layout.team_text_box
     team_lines = wrap_text_to_width(athlete.get("team_name"), team_font,

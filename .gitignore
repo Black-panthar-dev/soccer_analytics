@@ -5,6 +5,10 @@ __pycache__/
 pytest-cache-files-*/
 data/
 output/
+config/google_credentials.json
+config/google_credentials_*_backup.json
+config/google_token.json
+config/google_token_*_backup.json
 config/config.json
 PHASE1_CHECKPOINT.md
 PHASE1_PROGRESS.md

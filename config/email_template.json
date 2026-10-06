@@ -1,0 +1,9 @@
+{
+  "subject": "Sogility GO Athlete Assessment Report",
+  "greeting": "Hello,",
+  "single_report_body": "Attached is the latest Sogility GO athlete assessment report for {athlete_name}.\n\nPlease let us know if you have any questions regarding the assessment.",
+  "multiple_report_body": "Attached are the latest Sogility GO athlete assessment reports for {athlete_names}.\n\nPlease let us know if you have any questions regarding the assessments.",
+  "closing": "Thank you,\n\nSogility GO Team",
+  "single_report_html": "<p>Attached is the latest Sogility GO athlete assessment report for <strong>{athlete_name}</strong>.</p><p>Please let us know if you have any questions regarding the assessment.</p>",
+  "multiple_report_html": "<p>Attached are the latest Sogility GO athlete assessment reports for <strong>{athlete_names}</strong>.</p><p>Please let us know if you have any questions regarding the assessments.</p>"
+}

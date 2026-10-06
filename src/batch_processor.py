@@ -16,10 +16,11 @@ from .config_loader import load_config
 from .metric_audit import PROJECT_ROOT
 from .percentile_audit import run_percentile_audit
 from .report_generator import render_two_page_preview, report_layout_from_config
+from .progress_report import ProgressComparison, render_progress_page
 
 
-MANIFEST_COLUMNS = ["athlete_name", "age_group", "team_name", "assessment_date",
-                    "page1_png", "page2_png", "pdf_path", "generation_status", "notes"]
+MANIFEST_COLUMNS = ["roster_row", "athlete_name", "recipient_email", "age_group", "team_name", "assessment_date",
+                    "page1_png", "page2_png", "page3_png", "pdf_path", "generation_status", "notes"]
 FAILED_COLUMNS = ["athlete_name", "age_group", "generation_status", "reason"]
 _UNSAFE = re.compile(r"[^A-Za-z0-9_-]+")
 
@@ -38,8 +39,8 @@ def safe_athlete_stem(first_name: object, last_name: object) -> str:
 
 
 def render_final_pdf(page1_path: Path, page2_path: Path,
-                     output_pdf_path: Path) -> Path:
-    """Combine full-resolution PNG pages into an ordered two-page PDF."""
+                     output_pdf_path: Path, page3_path: Path | None = None) -> Path:
+    """Combine full-resolution PNG pages into an ordered two- or three-page PDF."""
     destination = Path(output_pdf_path)
     destination.parent.mkdir(parents=True, exist_ok=True)
     with Image.open(page1_path) as first_source, Image.open(page2_path) as second_source:
@@ -47,7 +48,14 @@ def render_final_pdf(page1_path: Path, page2_path: Path,
         second = second_source.convert("RGB")
         if first.size != second.size:
             raise ValueError("PDF source pages must have identical dimensions")
-        first.save(destination, "PDF", save_all=True, append_images=[second],
+        pages = [second]
+        if page3_path is not None:
+            with Image.open(page3_path) as third_source:
+                third = third_source.convert("RGB")
+                if first.size != third.size:
+                    raise ValueError("PDF source pages must have identical dimensions")
+                pages.append(third)
+        first.save(destination, "PDF", save_all=True, append_images=pages,
                    resolution=144.0, quality=95, optimize=False)
     if not destination.is_file() or destination.stat().st_size == 0:
         raise RuntimeError(f"PDF was not created successfully: {destination}")
@@ -63,11 +71,13 @@ def count_pdf_pages(path: Path) -> int:
 def generate_batch_reports(
     assessments: pd.DataFrame, config: Mapping[str, object], project_root: Path,
     output_root: Path, *, run_timestamp: str | None = None,
+    progress_comparisons: Mapping[object, ProgressComparison] | None = None,
 ) -> dict[str, object]:
     root = Path(project_root)
     output = Path(output_root)
-    page1_dir, page2_dir, pdf_dir = (output / "png/page1", output / "png/page2", output / "pdf")
-    for directory in (page1_dir, page2_dir, pdf_dir):
+    page1_dir, page2_dir, page3_dir, pdf_dir = (output / "png/page1", output / "png/page2",
+                                                output / "png/page3", output / "pdf")
+    for directory in (page1_dir, page2_dir, page3_dir, pdf_dir):
         directory.mkdir(parents=True, exist_ok=True)
     paths = config.get("paths")
     page2_config = config.get("page2_layout")
@@ -92,9 +102,10 @@ def generate_batch_reports(
     for _, row in assessments.iterrows():
         athlete_name = str(row.get("full_name") or "Unknown Athlete")
         age_group = row.get("age_group")
-        base = {"athlete_name": athlete_name, "age_group": age_group,
+        base = {"roster_row": row.get("roster_row"), "athlete_name": athlete_name,
+                "recipient_email": row.get("email"), "age_group": age_group,
                 "team_name": row.get("team_name"), "assessment_date": row.get("assessment_date"),
-                "page1_png": "", "page2_png": "", "pdf_path": ""}
+                "page1_png": "", "page2_png": "", "page3_png": "", "pdf_path": ""}
         if pd.isna(age_group) or not str(age_group).strip():
             skipped_count += 1
             reason = "Missing authoritative age group"
@@ -116,15 +127,21 @@ def generate_batch_reports(
         seen_stems.add(stem.casefold())
         page1 = page1_dir / f"{stem}_page1.png"
         page2 = page2_dir / f"{stem}_page2.png"
+        page3 = page3_dir / f"{stem}_page3.png"
         pdf = pdf_dir / f"{stem}_Assessment_Report.pdf"
         try:
             render_two_page_preview(row.to_dict(), template, club_logo, sogility_logo,
                                     page1, page2, layout, page2_config,
                                     place_page1_club_logo=place_page1_club_logo)
-            render_final_pdf(page1, page2, pdf)
-            if count_pdf_pages(pdf) != 2:
-                raise RuntimeError("Generated PDF does not contain exactly two pages")
-            if not all(path.is_file() and path.stat().st_size > 0 for path in (page1, page2, pdf)):
+            comparison = ((progress_comparisons or {}).get(row.get("roster_row")))
+            if comparison is not None:
+                render_progress_page(comparison, page3, sogility_logo)
+            render_final_pdf(page1, page2, pdf, page3 if comparison is not None else None)
+            expected_pages = 3 if comparison is not None else 2
+            if count_pdf_pages(pdf) != expected_pages:
+                raise RuntimeError(f"Generated PDF does not contain exactly {expected_pages} pages")
+            expected_files = (page1, page2, pdf) if comparison is None else (page1, page2, page3, pdf)
+            if not all(path.is_file() and path.stat().st_size > 0 for path in expected_files):
                 raise RuntimeError("One or more generated output files are missing or empty")
             success_count += 1
             if any(pd.isna(row.get(metric)) for metric in
@@ -133,12 +150,14 @@ def generate_batch_reports(
                     "juggling_non_dominant", "juggling_thighs")):
                 missing_count += 1
             manifest_records.append({**base, "page1_png": str(page1), "page2_png": str(page2),
+                                     "page3_png": str(page3) if comparison is not None else "",
                                      "pdf_path": str(pdf), "generation_status": "success", "notes": ""})
             log_lines.append(f"SUCCESS | {athlete_name} | {pdf}")
         except Exception as exc:  # one athlete must never terminate the batch
             failure_count += 1
             reason = f"{type(exc).__name__}: {exc}"
             manifest_records.append({**base, "page1_png": str(page1), "page2_png": str(page2),
+                                     "page3_png": str(page3) if page3.is_file() else "",
                                      "pdf_path": str(pdf), "generation_status": "failed", "notes": reason})
             failed_records.append({"athlete_name": athlete_name, "age_group": age_group,
                                    "generation_status": "failed", "reason": reason})

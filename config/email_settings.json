@@ -1,0 +1,12 @@
+{
+  "sender_display_name": "Sogility GO",
+  "reply_to": "",
+  "dry_run": true,
+  "live_send_enabled": false,
+  "test_recipient": "",
+  "expected_sender_email": "",
+  "max_total_attachment_bytes": 20000000,
+  "max_transient_attempts": 3,
+  "google_credentials_path": "config/google_credentials.json",
+  "google_token_path": "config/google_token.json"
+}

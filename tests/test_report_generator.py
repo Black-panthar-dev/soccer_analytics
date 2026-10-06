@@ -78,6 +78,13 @@ def test_long_legend_name_font_fits_available_slot() -> None:
     assert draw.textbbox((0, 0), "KORNBERGER, GRACELYNN", font=font)[2] <= 240
 
 
+def test_long_identity_name_font_fits_info_box() -> None:
+    image = Image.new("RGBA", (500, 200))
+    draw = ImageDraw.Draw(image)
+    font = _font_fitting_width("KORNBERGER, GRACELYNN", 24, 302, draw, minimum_size=16)
+    assert draw.textbbox((0, 0), "KORNBERGER, GRACELYNN", font=font)[2] <= 302
+
+
 def test_long_team_is_wrapped_in_preview(test_workspace: Path, layout) -> None:
     row = athlete()
     row["team_name"] = "A Very Long Elite Soccer Team Name"
